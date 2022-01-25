@@ -1,0 +1,5 @@
+#!/bin/bash
+for x in *.{ttf,otf}
+do
+	../font_to_py.py "${x}" 40 "${x%.*}.py" -x
+done

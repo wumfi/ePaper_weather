@@ -1,0 +1,5 @@
+#!/bin/bash
+for x in *.png
+do
+	../image_to_py.py -m L2 -d --width 60 --height 60 "${x}"
+done
