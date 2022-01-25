@@ -108,7 +108,7 @@ def GetSuffix(daynum):
 
 def GetDTBit(epoch,whichbit):
     # Convert the epoch to a real date
-    # Note, this board uses Jan 1 2000 rather than the normal 1970 one hence the - 946684800 bit
+    # Note, this board uses Jan 1 2000 rather than the normal 1970 one hence the - 946684800 bit in other functions
     # Note, this tuple has 8 parts, and the last two are DOY and DOW (Monday = 0)
     # ex. (2022, 1, 20, 21, 13, 31, 3, 20)
     # Various cases then return the relevant bits as needed
@@ -181,13 +181,6 @@ def SetBackground():
 
 def SetTopPane():
     global epoch_adjust
-#     current_hour=int(GetDTBit(time()+epoch_adjust,"h"))
-#     current_min=int(GetDTBit(time()+epoch_adjust,"m"))
-#     if current_hour>0 and current_hour<13:
-#         suffix="am"
-#     else:
-#         current_hour-=12
-#         suffix="pm"
     wstring(text=f"{GetDTBit(time()+epoch_adjust,"dt")}",yoffset=0,yheight=60,fontname=dinomouse40)
 
 def SetLeftPane():
