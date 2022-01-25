@@ -48,7 +48,7 @@ class DummyDevice(FrameBuffer):
 # If x/y are not specified, then text will be centered in that axis across the whole screen
 # Optional xoffset, xwidth, yoffset, yheight allows centering within boxes
 # Logic is that if either x or y is missing, then it will centre in that axis.  Additionally,
-# If offset and width is specified for an axis, then 
+# If offset and width is specified for an axis, then it will centre starting from offset and use width
 def wstring(text,fontname,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yheight=None):
     
     dummy = DummyDevice(epd.width, epd.height, MONO_HLSB)
