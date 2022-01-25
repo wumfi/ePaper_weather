@@ -1,5 +1,5 @@
 from config import *
-from Pico_ePaper import Eink
+from Pico_ePaper_partial import Eink
 from writer import Writer
 from utime import sleep_ms,gmtime
 from ntptime import settime
@@ -12,6 +12,7 @@ from urequests import get
 from framebuf import FrameBuffer, MONO_HLSB
 global WeatherJSON
 global epoch_adjust
+global epd
 epoch_adjust=946684800
 
 # Append our custom dirs to the path
@@ -28,6 +29,7 @@ def ConnectToWifi():
         sta_if.connect(ssid, pwd)
         while not sta_if.isconnected():
             pass
+    settime()
     print('network config:', sta_if.ifconfig())
 
 def ShutdownWifi():
@@ -49,7 +51,7 @@ class DummyDevice(FrameBuffer):
 # Optional xoffset, xwidth, yoffset, yheight allows centering within boxes
 # Logic is that if either x or y is missing, then it will centre in that axis.  Additionally,
 # If offset and width is specified for an axis, then it will centre starting from offset and use width
-def wstring(text,fontname,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yheight=None):
+def wstring(epd,text,fontname,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yheight=None):
     
     dummy = DummyDevice(epd.width, epd.height, MONO_HLSB)
     wri = Writer(dummy, fontname)
@@ -71,7 +73,7 @@ def wstring(text,fontname,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yh
     epd.blit(dummy, 0, 0, key=1, ram=epd.RAM_RBW)
 
 # Same deal, see comments on previous function
-def wimage(icon,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yheight=None):
+def wimage(epd,icon,x=None,y=None,xoffset=None,xwidth=None,yoffset=None,yheight=None):
     if x==None:
         if xoffset==None:
             x=(epd.width - icon.width) // 2
@@ -173,17 +175,16 @@ def debug(msg):
     if debugflag==1:
         print(msg)
         
-def SetBackground():
-    global epd
+def SetBackground(epd):
     epd.rect(0,0,480,280)
     epd.hline(0,56,480)
     epd.vline(138,56,240)
 
-def SetTopPane():
+def SetTopPane(epd):
     global epoch_adjust
-    wstring(text=f"{GetDTBit(time()+epoch_adjust,"dt")}",yoffset=0,yheight=60,fontname=dinomouse40)
+    wstring(epd=epd,text=f"{GetDTBit(time()+epoch_adjust,"dt")}",yoffset=0,yheight=60,fontname=dinomouse40)
 
-def SetLeftPane():
+def SetLeftPane(epd):
     global WeatherJSON
     global epoch_adjust
     current_hour=int(GetDTBit(time()+epoch_adjust,"h"))
@@ -193,16 +194,16 @@ def SetLeftPane():
     else:
         current_hour-=12
         suffix="pm"
-    wstring(text=f"{GetFriendlyTime(GetDTBit(time()+epoch_adjust,"tm"))}",xoffset=0,xwidth=138,y=74,fontname=freesans20)
+    wstring(epd=epd,text=f"{GetFriendlyTime(GetDTBit(time()+epoch_adjust,"tm"))}",xoffset=0,xwidth=138,y=74,fontname=freesans20)
     icon=GetIcon(cond=WeatherJSON["current"]["weather"][0]["id"],h=gmtime()[3],typ="weather")
-    wimage(icon=icon,xoffset=0,xwidth=138,y=90)
-    wstring(text=icon.desc,xoffset=0,xwidth=138,y=150,fontname=freesans20)
+    wimage(epd=epd,icon=icon,xoffset=0,xwidth=138,y=90)
+    wstring(epd=epd,text=icon.desc,xoffset=0,xwidth=138,y=150,fontname=freesans20)
     icon=GetIcon(cond=WeatherJSON["current"]["feels_like"])
-    wimage(icon=icon,xoffset=0,xwidth=138,y=180)
-    wstring(text=f"{round(WeatherJSON["current"]["feels_like"])} c",xoffset=0,xwidth=138,y=250,fontname=freesans20)
+    wimage(epd=epd,icon=icon,xoffset=0,xwidth=138,y=180)
+    wstring(epd=epd,text=f"{round(WeatherJSON["current"]["feels_like"])} c",xoffset=0,xwidth=138,y=250,fontname=freesans20)
     
     
-def SetMainPane():
+def SetMainPane(epd):
     global WeatherJSON
     ctr=1
     DictWeather={}
@@ -212,10 +213,10 @@ def SetMainPane():
     for h in range(1,4):
         this_hour=int(DictWeather[h]["dt"].split(":")[0])
         icon=GetIcon(cond=DictWeather[h]["code"],h=this_hour,typ="weather")
-        wimage(icon,yoffset=92,yheight=60,x=80+(h*100))
-        wstring(GetFriendlyTime(DictWeather[h]["dt"]),xoffset=80+(h*100),xwidth=icon.width,yoffset=142,yheight=60,fontname=freesans20)
-        wstring(text=icon.desc,xoffset=80+(h*100),xwidth=icon.width,yoffset=180,yheight=60,fontname=dinomouse20)
-        wstring(text=f"{DictWeather[h]["temp"]} c",xoffset=80+(h*100),xwidth=icon.width,yoffset=200,yheight=60,fontname=freesans20)
+        wimage(epd=epd,icon=icon,yoffset=92,yheight=60,x=80+(h*100))
+        wstring(epd=epd,text=GetFriendlyTime(DictWeather[h]["dt"]),xoffset=80+(h*100),xwidth=icon.width,yoffset=142,yheight=60,fontname=freesans20)
+        wstring(epd=epd,text=icon.desc,xoffset=80+(h*100),xwidth=icon.width,yoffset=180,yheight=60,fontname=dinomouse20)
+        wstring(epd=epd,text=f"{DictWeather[h]["temp"]} c",xoffset=80+(h*100),xwidth=icon.width,yoffset=200,yheight=60,fontname=freesans20)
 
 def GetFriendlyTime(dt):
     print(dt)
@@ -228,14 +229,12 @@ def GetFriendlyTime(dt):
     else:
         return f"{h-12}:{m}pm"
 
-def UpdateEPD():
-    global epd
+def UpdateEPD(epd):
     GetWeather()
-    epd = Eink(rotation=270)
-    epd.fill
-    SetBackground()
-    SetTopPane() 
-    SetLeftPane()
-    SetMainPane()
+    epd.fill()
+    SetBackground(epd)
+    SetTopPane(epd) 
+    SetLeftPane(epd)
+    SetMainPane(epd)
     epd.show()
-    epd.sleep()
+    #epd.sleep()
