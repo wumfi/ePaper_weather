@@ -194,9 +194,9 @@ def SetLeftPane(epd):
     else:
         current_hour-=12
         suffix="pm"
-    wstring(epd=epd,text=f"{GetFriendlyTime(GetDTBit(time()+epoch_adjust,"tm"))}",xoffset=0,xwidth=138,y=74,fontname=freesans20)
+    wstring(epd=epd,text=f"{GetFriendlyTime(GetDTBit(time()+epoch_adjust,"tm"))}",xoffset=0,xwidth=138,y=72,fontname=freesans20)
     icon=GetIcon(cond=WeatherJSON["current"]["weather"][0]["id"],h=gmtime()[3],typ="weather")
-    wimage(epd=epd,icon=icon,xoffset=0,xwidth=138,y=90)
+    wimage(epd=epd,icon=icon,xoffset=0,xwidth=138,y=92)
     wstring(epd=epd,text=icon.desc,xoffset=0,xwidth=138,y=150,fontname=freesans20)
     icon=GetIcon(cond=WeatherJSON["current"]["feels_like"])
     wimage(epd=epd,icon=icon,xoffset=0,xwidth=138,y=180)

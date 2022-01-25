@@ -8,7 +8,7 @@ while True:
     debug("Updating screen")
     UpdateEPD(epd)
     ShutdownWifi()
-    sleep(sleeptime)
+    sleep(sleepytime)
 
 #Leaving this here for debug/testing
 # ConnectToWifi()
